@@ -17,61 +17,20 @@ class PageHome extends StatelessWidget {
             width: size.width,
             height: size.height,
             decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(
-                  '${PathImage.backgrounds}money-5029288_1920.jpg',
-                ),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withOpacity(0.6),
-                    Colors.blue.withOpacity(0.3),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
+              // image: DecorationImage(
+              //   image: AssetImage(
+              //     '${PathImage.backgrounds}money-5029288_1920.jpg',
+              //   ),
+              //   fit: BoxFit.cover,
+              // ),
+              color: Colors.white,
             ),
           ),
-
           // Content
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Judul
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.85),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        offset: Offset(0, 4),
-                        blurRadius: 6,
-                      ),
-                    ],
-                  ),
-                  child: const Text(
-                    "Manajemen Keuangan",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
                 // Icon dengan animasi floating halus
                 TweenAnimationBuilder(
                   tween: Tween<double>(begin: -10, end: 10),
@@ -83,17 +42,9 @@ class PageHome extends StatelessWidget {
                       child: child,
                     );
                   },
-                  child: Icon(
-                    FontAwesomeIcons.dollarSign,
-                    size: size.width * 0.15,
-                    color: Colors.yellowAccent,
-                    shadows: const [
-                      Shadow(
-                        color: Colors.black45,
-                        offset: Offset(2, 2),
-                        blurRadius: 6,
-                      ),
-                    ],
+                  child: Image.asset(
+                    '${PathImage.backgrounds}back1.png',
+                    width: 400,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -112,9 +63,9 @@ class PageHome extends StatelessWidget {
                     "Aplikasi Manajemen Keuangan",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 25,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: Color.fromARGB(221, 0, 0, 0),
                     ),
                   ),
                 ),
@@ -123,7 +74,7 @@ class PageHome extends StatelessWidget {
                 // Tombol Mulai modern
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
+                    backgroundColor: Colors.blue,
                     shadowColor: Colors.black45,
                     elevation: 6,
                     padding: const EdgeInsets.symmetric(
