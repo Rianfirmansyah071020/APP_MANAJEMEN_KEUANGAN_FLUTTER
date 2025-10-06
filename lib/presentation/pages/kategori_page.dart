@@ -1,21 +1,567 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:manajemen_keuangan/core/constants/colors.dart';
+import 'package:manajemen_keuangan/presentation/controllers/kategoris_controller.dart';
 import 'package:manajemen_keuangan/presentation/pages/template_page.dart';
+import 'package:provider/provider.dart';
 
 class KategoriPage extends StatelessWidget {
   const KategoriPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return TemplatePage(
-      title: "Kategori",
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(children: [Text("Kategori")]),
+    return ChangeNotifierProvider(
+      create: (_) => KategorisController(),
+      child: Consumer<KategorisController>(
+        builder: (context, controller, _) {
+          return TemplatePage(
+            title: "Kategoris Management",
+            body: SafeArea(
+              child: SingleChildScrollView(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    bool isWide = constraints.maxWidth > 800;
+
+                    return Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(15.0),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Container(
+                              padding: const EdgeInsets.all(10.0),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey,
+                                    blurRadius: 1.0,
+                                  ),
+                                ],
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(12),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  const Icon(
+                                    FontAwesomeIcons.boxArchive,
+                                    color: Colors.green,
+                                  ),
+                                  SizedBox(width: 30),
+                                  Text(
+                                    "Kategoris Management",
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: isWide
+                              ? Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(
+                                      width: constraints.maxWidth * 0.35,
+                                      child: controller.isEditing
+                                          ? _buildEditCard(context, controller)
+                                          : _buildFormCard(context, controller),
+                                    ),
+                                    const SizedBox(width: 20),
+                                    Expanded(
+                                      child: _buildDataTableCard(
+                                        context,
+                                        controller,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  children: [
+                                    controller.isEditing
+                                        ? _buildEditCard(context, controller)
+                                        : _buildFormCard(context, controller),
+                                    const SizedBox(height: 20),
+                                    _buildDataTableCard(context, controller),
+                                  ],
+                                ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// ================================
+  /// FORM CARD (INSERT)
+  /// ================================
+  Widget _buildFormCard(BuildContext context, KategorisController controller) {
+    return Card(
+      color: Colors.white,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade300),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Form(
+          key: controller.formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Tambah Kategori",
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 20),
+              _buildTextField(
+                controller: controller.namaKategoriController,
+                label: "nama kategori",
+                hint: "Enter your nama kategori",
+                icon: FontAwesomeIcons.boxArchive,
+                validator: (v) =>
+                    v!.isEmpty ? "Nama Kategori can't be empty" : null,
+              ),
+              const SizedBox(height: 15),
+              _buildTextField(
+                controller: controller.deskripsiKategoriController,
+                label: "deskripsi kategori",
+                hint: "Enter your deskripsi kategori",
+                icon: FontAwesomeIcons.boxArchive,
+                validator: (v) =>
+                    v!.isEmpty ? "deskripsi kategori can't be empty" : null,
+              ),
+              const SizedBox(height: 15),
+              _buildTextField(
+                controller: controller.valueKategoriController,
+                label: "value kategori",
+                hint: "Enter your value kategori",
+                icon: FontAwesomeIcons.boxArchive,
+                validator: (v) =>
+                    v!.isEmpty ? "value kategori can't be empty" : null,
+              ),
+              const SizedBox(height: 25),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                    onPressed: controller.resetForm,
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                    ),
+                    onPressed: () async {
+                      if (controller.formKey.currentState!.validate()) {
+                        final success = await controller.insertKategori();
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              backgroundColor: Colors.green,
+                              content: Text("kategori saved successfully!"),
+                            ),
+                          );
+                          controller.resetForm();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              backgroundColor: Colors.red,
+                              content: Text("Failed to save kategori!"),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    child: const Text(
+                      "Submit",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  /// ================================
+  /// EDIT CARD
+  /// ================================
+  Widget _buildEditCard(BuildContext context, KategorisController controller) {
+    return Card(
+      color: Colors.white,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade300),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Form(
+          key: controller.formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Edit Kategori",
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 20),
+              _buildTextField(
+                controller: controller.namaKategoriController,
+                label: "nama kategori",
+                hint: "Enter your nama kategori",
+                icon: FontAwesomeIcons.boxArchive,
+                validator: (v) =>
+                    v!.isEmpty ? "Nama Kategori can't be empty" : null,
+              ),
+              const SizedBox(height: 15),
+              _buildTextField(
+                controller: controller.deskripsiKategoriController,
+                label: "deskripsi kategori",
+                hint: "Enter your deskripsi kategori",
+                icon: FontAwesomeIcons.key,
+                validator: (v) =>
+                    v!.isEmpty ? "deskripsi kategori can't be empty" : null,
+              ),
+              const SizedBox(height: 15),
+              _buildTextField(
+                controller: controller.valueKategoriController,
+                label: "value kategori",
+                hint: "Enter your value kategori",
+                icon: FontAwesomeIcons.key,
+                validator: (v) =>
+                    v!.isEmpty ? "value kategori can't be empty" : null,
+              ),
+              const SizedBox(height: 25),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                    onPressed: controller.cancelEdit,
+                    child: const Text(
+                      "Cancel Edit",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                    ),
+                    onPressed: () async {
+                      if (controller.formKey.currentState!.validate()) {
+                        final success = await controller.updateKategori();
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              backgroundColor: Colors.green,
+                              content: Text("Kategori updated successfully!"),
+                            ),
+                          );
+
+                          controller.resetForm();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              backgroundColor: Colors.red,
+                              content: Text(
+                                "Kategori admin@gmail.com tidak dapat diupdate!",
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    },
+
+                    child: const Text(
+                      "Update",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// ================================
+  /// DATA TABLE CARD
+  /// ================================
+  Widget _buildDataTableCard(
+    BuildContext context,
+    KategorisController controller,
+  ) {
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade300),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SizedBox(
+                  width: 300,
+                  height: 35,
+                  child: TextField(
+                    controller: controller.searchController,
+                    decoration: const InputDecoration(
+                      labelStyle: TextStyle(color: Colors.grey, fontSize: 13),
+                      labelText: "Search kategori...",
+                      prefixIcon: Icon(
+                        Icons.search,
+                        size: 17,
+                        color: Colors.grey,
+                      ),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (_) => controller.notifyListeners(),
+                  ),
+                ),
+                const SizedBox(width: 15),
+                DropdownButton<int>(
+                  icon: const Icon(Icons.arrow_drop_down),
+                  value: controller.rowsPerPage,
+                  items: [5, 10, 20, 50].map((val) {
+                    return DropdownMenuItem<int>(
+                      value: val,
+                      child: Text("$val"),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    controller.rowsPerPage = val!;
+                    controller.currentPage = 0;
+                    controller.notifyListeners();
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            FutureBuilder(
+              future: controller.getKategoris(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text("No kategoris found"));
+                }
+
+                final kategoris = snapshot.data!;
+
+                return Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+
+                      child: DataTable(
+                        headingRowColor: MaterialStateProperty.all(
+                          Colors.grey.shade200,
+                        ),
+                        border: TableBorder.all(color: Colors.grey.shade300),
+                        columns: const [
+                          DataColumn(label: Text("No")),
+                          DataColumn(label: Text("nama kategori")),
+                          DataColumn(label: Text("deskripsi kategori")),
+                          DataColumn(label: Text("value kategori")),
+                          DataColumn(label: Text("Actions")),
+                        ],
+                        rows: List.generate(kategoris.length, (index) {
+                          final kategori = kategoris[index];
+                          final rowNumber =
+                              (controller.currentPage *
+                                  controller.rowsPerPage) +
+                              index +
+                              1;
+                          return DataRow(
+                            cells: [
+                              DataCell(
+                                Center(child: Text(rowNumber.toString())),
+                              ),
+                              DataCell(Text(kategori.nama_kategori)),
+                              DataCell(Text(kategori.deskripsi_kategori)),
+                              DataCell(Text(kategori.value_kategori)),
+                              DataCell(
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.edit,
+                                        color: Colors.blue,
+                                      ),
+                                      onPressed: () =>
+                                          controller.setEditMode(kategori),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: const Text(
+                                              "Delete Kategori",
+                                            ),
+                                            content: const Text(
+                                              "Are you sure you want to delete this kategori?",
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                child: const Text("Cancel"),
+                                                onPressed: () =>
+                                                    Navigator.pop(context),
+                                              ),
+                                              TextButton(
+                                                child: const Text("Delete"),
+                                                onPressed: () async {
+                                                  final success =
+                                                      await controller
+                                                          .deleteKategori(
+                                                            kategori.id!,
+                                                          );
+
+                                                  if (success) {
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      const SnackBar(
+                                                        backgroundColor:
+                                                            Colors.green,
+                                                        content: Text(
+                                                          "Kategori deleted successfully",
+                                                        ),
+                                                      ),
+                                                    );
+                                                  } else {
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      const SnackBar(
+                                                        backgroundColor:
+                                                            Colors.red,
+                                                        content: Text(
+                                                          "Failed to delete Kategori",
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+
+                                                  Navigator.pop(context);
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        }),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: controller.currentPage > 0
+                              ? () {
+                                  controller.currentPage--;
+                                  controller.notifyListeners();
+                                }
+                              : null,
+                        ),
+                        Text("Page ${controller.currentPage + 1}"),
+                        IconButton(
+                          icon: const Icon(Icons.arrow_forward),
+                          onPressed: kategoris.length == controller.rowsPerPage
+                              ? () {
+                                  controller.currentPage++;
+                                  controller.notifyListeners();
+                                }
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// ================================
+  /// CUSTOM TEXTFIELD
+  /// ================================
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    String? Function(String?)? validator,
+    TextInputType? keyboardType,
+    bool obscureText = false,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+        labelText: label,
+        hintText: hint,
+        prefixIcon: Icon(icon, size: 16),
+        prefixIconColor: Colors.grey,
+        border: const OutlineInputBorder(),
+      ),
+      validator: validator,
     );
   }
 }

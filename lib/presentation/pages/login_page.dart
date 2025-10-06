@@ -1,7 +1,13 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:manajemen_keuangan/core/constants/PathImage.dart';
 import 'package:manajemen_keuangan/core/constants/colors.dart';
+import 'package:manajemen_keuangan/core/database/db_helper.dart';
+import 'package:bcrypt/bcrypt.dart';
+import 'package:manajemen_keuangan/presentation/controllers/auth_controller.dart';
+import 'package:manajemen_keuangan/presentation/controllers/users_controller.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,66 +20,33 @@ class _LoginPageState extends State<LoginPage> {
   final formKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final Map<String, String> dummyAkun = {'rian071020@gmail.com': '1234'};
+
+  final userController = UsersController(); // ✅ instansiasi controller
+  final authContoller = AuthController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              Color.fromARGB(255, 255, 255, 255),
-              Color.fromARGB(255, 250, 250, 250),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        // ... UI sama seperti sebelumnya
         child: Row(
           children: [
+            // Bagian kiri ilustrasi tetap
             MediaQuery.of(context).size.width > 900
                 ? Expanded(
                     child: Container(
-                      width: MediaQuery.of(context).size.width * 0.5,
-                      height: MediaQuery.of(context).size.height,
-                      decoration: const BoxDecoration(color: Colors.white10),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Ayo Kelola Keuangan Mu',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              Text(
-                                'Dengan Aplikasi Manajemen Keuangan',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              Image.asset(
-                                '${PathImage.backgrounds}back1.png',
-                                fit: BoxFit.cover,
-                                width: 500,
-                              ),
-                            ],
+                      decoration: const BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage(
+                            '${PathImage.backgrounds}back1.png',
                           ),
                         ),
                       ),
                     ),
                   )
-                : SizedBox.shrink(), // kosong kalau layar kecil
+                : const SizedBox.shrink(),
 
+            // Bagian kanan form login
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
@@ -105,26 +78,10 @@ class _LoginPageState extends State<LoginPage> {
                             TextFormField(
                               controller: emailController,
                               decoration: const InputDecoration(
-                                hoverColor: Colors.white,
-                                fillColor: Colors.white,
-                                suffixIconColor: Colors.white,
                                 labelText: "Email",
                                 hintText: "Enter your email",
-                                labelStyle: TextStyle(
-                                  color: Color.fromARGB(255, 175, 175, 175),
-                                ),
-                                hintStyle: TextStyle(
-                                  color: Color.fromARGB(255, 175, 175, 175),
-                                ),
-                                prefixStyle: TextStyle(color: Colors.white),
                                 prefixIcon: Icon(FontAwesomeIcons.envelope),
                                 border: OutlineInputBorder(),
-                                errorBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.red),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                ),
                               ),
                               keyboardType: TextInputType.emailAddress,
                               validator: (value) {
@@ -132,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
                                   return "Email can't be empty";
                                 }
                                 if (!RegExp(
-                                  r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+                                  r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
                                 ).hasMatch(value)) {
                                   return "Enter a valid email";
                                 }
@@ -146,98 +103,199 @@ class _LoginPageState extends State<LoginPage> {
                                 border: OutlineInputBorder(),
                                 labelText: "Password",
                                 hintText: "Enter your password",
-                                labelStyle: TextStyle(
-                                  color: Color.fromARGB(255, 175, 175, 175),
-                                ),
-                                prefixStyle: TextStyle(color: Colors.white),
                                 prefixIcon: Icon(FontAwesomeIcons.lock),
-                                hintStyle: TextStyle(
-                                  color: Color.fromARGB(255, 175, 175, 175),
-                                ),
-                                errorBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.red),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                ),
                               ),
                               validator: (value) => value!.isEmpty
                                   ? "Password can't be empty"
                                   : null,
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blueAccent,
-                                    foregroundColor: const Color.fromARGB(
-                                      255,
-                                      236,
-                                      236,
-                                      236,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    fixedSize: const Size(100, 40),
-                                  ),
-                                  onPressed: () {
-                                    final email = emailController.text;
-                                    final password = passwordController.text;
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                if (constraints.maxWidth < 300) {
+                                  // 👉 Layar kecil (HP)
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.blueAccent,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
+                                          minimumSize: const Size.fromHeight(
+                                            50,
+                                          ), // full width
+                                        ),
+                                        onPressed: () async {
+                                          if (formKey.currentState!
+                                              .validate()) {
+                                            final email = emailController.text
+                                                .trim();
+                                            final password = passwordController
+                                                .text
+                                                .trim();
 
-                                    if (formKey.currentState!.validate()) {
-                                      if (dummyAkun.containsKey(email) &&
-                                          dummyAkun[email] == password) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            backgroundColor: Colors.green,
-                                            content: Text("Login Berhasil"),
-                                            duration: Duration(seconds: 2),
+                                            final user = await authContoller
+                                                .login(email, password);
+
+                                            if (user != null) {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  backgroundColor: Colors.green,
+                                                  content: Text(
+                                                    "Login Berhasil",
+                                                  ),
+                                                  duration: Duration(
+                                                    seconds: 2,
+                                                  ),
+                                                ),
+                                              );
+                                              Navigator.pushNamed(
+                                                context,
+                                                '/dashboard',
+                                              );
+                                            } else {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  backgroundColor: Colors.red,
+                                                  content: Text(
+                                                    "Email atau password salah",
+                                                  ),
+                                                  duration: Duration(
+                                                    seconds: 2,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          }
+                                        },
+                                        child: const Text("Login"),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color.fromARGB(
+                                            255,
+                                            7,
+                                            204,
+                                            188,
                                           ),
-                                        );
-                                        Navigator.pushNamed(
-                                          context,
-                                          '/dashboard',
-                                        );
-                                      } else {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            backgroundColor: Colors.red,
-                                            content: Text("Login Gagal"),
-                                            duration: Duration(seconds: 2),
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                           ),
-                                        );
-                                      }
-                                    }
-                                  },
-                                  child: const Text("Login"),
-                                ),
-                                const SizedBox(width: 10),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color.fromARGB(
-                                      255,
-                                      7,
-                                      204,
-                                      188,
-                                    ),
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    fixedSize: const Size(100, 40),
-                                  ),
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text("Back"),
-                                ),
-                              ],
+                                          minimumSize: const Size.fromHeight(
+                                            50,
+                                          ), // full width
+                                        ),
+                                        onPressed: () {
+                                          Navigator.pushNamed(context, '/');
+                                        },
+                                        child: const Text("Back"),
+                                      ),
+                                    ],
+                                  );
+                                } else {
+                                  // 👉 Layar besar (desktop/tablet)
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.blueAccent,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
+                                          fixedSize: const Size(100, 40),
+                                        ),
+                                        onPressed: () async {
+                                          if (formKey.currentState!
+                                              .validate()) {
+                                            final email = emailController.text
+                                                .trim();
+                                            final password = passwordController
+                                                .text
+                                                .trim();
+
+                                            final user = await authContoller
+                                                .login(email, password);
+
+                                            if (user != null) {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  backgroundColor: Colors.green,
+                                                  content: Text(
+                                                    "Login Berhasil",
+                                                  ),
+                                                  duration: Duration(
+                                                    seconds: 2,
+                                                  ),
+                                                ),
+                                              );
+                                              Navigator.pushNamed(
+                                                context,
+                                                '/dashboard',
+                                              );
+                                            } else {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  backgroundColor: Colors.red,
+                                                  content: Text(
+                                                    "Email atau password salah",
+                                                  ),
+                                                  duration: Duration(
+                                                    seconds: 2,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          }
+                                        },
+                                        child: const Text("Login"),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color.fromARGB(
+                                            255,
+                                            7,
+                                            204,
+                                            188,
+                                          ),
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
+                                          fixedSize: const Size(100, 40),
+                                        ),
+                                        onPressed: () {
+                                          Navigator.pushNamed(context, '/');
+                                        },
+                                        child: const Text("Back"),
+                                      ),
+                                    ],
+                                  );
+                                }
+                              },
                             ),
                           ],
                         ),
